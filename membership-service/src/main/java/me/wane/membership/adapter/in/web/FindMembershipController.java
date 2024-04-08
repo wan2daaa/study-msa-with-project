@@ -1,9 +1,9 @@
 package me.wane.membership.adapter.in.web;
 
 import lombok.RequiredArgsConstructor;
+import me.wane.common.WebAdapter;
 import me.wane.membership.application.port.in.FindMembershipCommand;
 import me.wane.membership.application.port.in.FindMembershipUseCase;
-import me.wane.membership.common.WebAdapter;
 import me.wane.membership.domain.Membership;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

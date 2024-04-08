@@ -2,12 +2,12 @@ package me.wane.membership.application.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import me.wane.common.UseCase;
 import me.wane.membership.adapter.out.persistence.MembershipJpaEntity;
 import me.wane.membership.adapter.out.persistence.MembershipMapper;
 import me.wane.membership.application.port.in.ModifyMembershipCommand;
 import me.wane.membership.application.port.in.ModifyMembershipUseCase;
 import me.wane.membership.application.port.out.ModifyMembershipPort;
-import me.wane.membership.common.UseCase;
 import me.wane.membership.domain.Membership;
 import me.wane.membership.domain.Membership.MembershipAddress;
 import me.wane.membership.domain.Membership.MembershipEmail;
@@ -43,5 +43,6 @@ public class ModifyMembershipService implements ModifyMembershipUseCase {
         new MembershipIsCorp(command.isCorp())
     );
 
-    return membershipMapper.mapToDomainEntity(jpaEntity);  }
+    return membershipMapper.mapToDomainEntity(jpaEntity);
+  }
 }

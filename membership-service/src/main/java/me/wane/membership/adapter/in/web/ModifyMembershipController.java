@@ -1,14 +1,11 @@
 package me.wane.membership.adapter.in.web;
 
 import lombok.RequiredArgsConstructor;
-import me.wane.membership.application.port.in.FindMembershipCommand;
+import me.wane.common.WebAdapter;
 import me.wane.membership.application.port.in.ModifyMembershipCommand;
 import me.wane.membership.application.port.in.ModifyMembershipUseCase;
-import me.wane.membership.common.WebAdapter;
 import me.wane.membership.domain.Membership;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,3 +1,4 @@
 rootProject.name = 'study-msa-with-project'
 include 'membership-service'
+include 'common'
 

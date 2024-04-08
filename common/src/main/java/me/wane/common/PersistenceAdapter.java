@@ -1,4 +1,4 @@
-package me.wane.membership.common;
+package me.wane.common;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

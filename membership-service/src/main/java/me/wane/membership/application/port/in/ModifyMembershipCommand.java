@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import me.wane.membership.common.SelfValidating;
+import me.wane.common.SelfValidating;
 
 @Builder
 @Data

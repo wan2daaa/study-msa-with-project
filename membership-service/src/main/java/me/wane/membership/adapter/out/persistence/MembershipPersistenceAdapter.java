@@ -1,12 +1,10 @@
 package me.wane.membership.adapter.out.persistence;
 
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import me.wane.common.PersistenceAdapter;
 import me.wane.membership.application.port.out.FindMembershipPort;
 import me.wane.membership.application.port.out.ModifyMembershipPort;
 import me.wane.membership.application.port.out.RegisterMembershipPort;
-import me.wane.membership.common.PersistenceAdapter;
-import me.wane.membership.domain.Membership;
 import me.wane.membership.domain.Membership.MembershipAddress;
 import me.wane.membership.domain.Membership.MembershipEmail;
 import me.wane.membership.domain.Membership.MembershipId;

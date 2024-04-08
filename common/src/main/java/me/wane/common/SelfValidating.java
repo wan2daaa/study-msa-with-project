@@ -1,4 +1,4 @@
-package me.wane.membership.common;
+package me.wane.common;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
