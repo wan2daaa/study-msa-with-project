@@ -3,6 +3,7 @@ package me.wane.membership.adapter.out.persistence;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import me.wane.membership.application.port.out.FindMembershipPort;
+import me.wane.membership.application.port.out.ModifyMembershipPort;
 import me.wane.membership.application.port.out.RegisterMembershipPort;
 import me.wane.membership.common.PersistenceAdapter;
 import me.wane.membership.domain.Membership;
@@ -15,7 +16,8 @@ import me.wane.membership.domain.Membership.MembershipName;
 
 @RequiredArgsConstructor
 @PersistenceAdapter
-public class MembershipPersistenceAdapter implements RegisterMembershipPort, FindMembershipPort {
+public class MembershipPersistenceAdapter implements RegisterMembershipPort, FindMembershipPort,
+    ModifyMembershipPort {
 
   private final SpringDataMembershipRepository membershipRepository;
 
@@ -42,5 +44,22 @@ public class MembershipPersistenceAdapter implements RegisterMembershipPort, Fin
   public MembershipJpaEntity findMembership(MembershipId membershipId) {
     return membershipRepository.getById(
         Long.parseLong(membershipId.getMembershipId()));
+  }
+
+  @Override
+  public MembershipJpaEntity modifyMembership(MembershipId membershipId,
+      MembershipName membershipName, MembershipEmail membershipEmail,
+      MembershipAddress membershipAddress, MembershipIsValid membershipIsValid,
+      MembershipIsCorp membershipIsCorp) {
+    MembershipJpaEntity entity = membershipRepository.getById(
+        Long.parseLong(membershipId.getMembershipId()));
+
+    entity.setName(membershipName.getNameValue());
+    entity.setEmail(membershipEmail.getEmailValue());
+    entity.setAddress(membershipAddress.getAddressValue());
+    entity.setValid(membershipIsValid.isValidValue());
+    entity.setCorp(membershipIsCorp.isCorpValue());
+
+    return membershipRepository.save(entity);
   }
 }
