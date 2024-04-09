@@ -38,8 +38,8 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    runtimeOnly 'com.h2database:h2'
     runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {
@@ -53,7 +53,7 @@ docker {
     name rootProject.name+'-'+project.name + ":" + version
 
     //어떤 Dockerfile을 사용할지
-    dockerfile file("./Dockerfile")
+    dockerfile file("../Dockerfile")
 
     //어떤 파일들을 Dockerfile에 복사할 것인가
     files tasks.bootJar.outputs.files
