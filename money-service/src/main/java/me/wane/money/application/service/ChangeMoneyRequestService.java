@@ -2,7 +2,6 @@ package me.wane.money.application.service;
 
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.CountDownLatchManager;
@@ -11,10 +10,15 @@ import me.wane.common.SubTask;
 import me.wane.common.UseCase;
 import me.wane.money.adapter.out.persistence.MemberMoneyJpaEntity;
 import me.wane.money.adapter.out.persistence.MoneyChangingRequestMapper;
+import me.wane.money.application.port.in.DecreaseMoneyRequestCommand;
+import me.wane.money.application.port.in.DecreaseMoneyRequestUseCase;
 import me.wane.money.application.port.in.IncreaseMoneyRequestCommand;
 import me.wane.money.application.port.in.IncreaseMoneyRequestUseCase;
+import me.wane.money.application.port.out.DecreaseMoneyPort;
 import me.wane.money.application.port.out.GetMembershipPort;
+import me.wane.money.application.port.out.GetMoneyPort;
 import me.wane.money.application.port.out.IncreaseMoneyPort;
+import me.wane.money.application.port.out.MembershipStatus;
 import me.wane.money.application.port.out.SendRechargingMoneyTaskPort;
 import me.wane.money.domain.MemberMoney;
 import me.wane.money.domain.MoneyChangingRequest;
@@ -22,9 +26,12 @@ import me.wane.money.domain.MoneyChangingRequest;
 @RequiredArgsConstructor
 @Transactional
 @UseCase
-public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase {
+public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
+    DecreaseMoneyRequestUseCase {
 
   private final IncreaseMoneyPort increaseMoneyPort;
+  private final DecreaseMoneyPort decreaseMoneyPort;
+  private final GetMoneyPort getMoneyPort;
   private final MoneyChangingRequestMapper mapper;
   private final GetMembershipPort getMembershipPort;
   private final SendRechargingMoneyTaskPort sendRechargingMoneyTaskPort;
@@ -118,8 +125,6 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase 
     // 3-1. task-consumer
     // 등록된 sub-task를 status 가 모두 OK 라면 -> task 결과를 Produce
 
-
-
     // 4. Task Result Consume
     // 받은 응답을 다시, countDownLatchmanager를 통해서 결과 데이터를 받아야 함
     String result = countDownLatchManager.getDataForKey(task.getTaskID());
@@ -151,4 +156,42 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase 
   }
 
 
+  @Override
+  public MoneyChangingRequest decreaseMoneyRequest(DecreaseMoneyRequestCommand command) {
+    // 머니의 충전.증액이라는 과정
+    // 1. 고객 정보가 정상인지 확인 (멤버)
+    MembershipStatus membership = getMembershipPort.getMembership(command.getTargetMembershipId());
+    if (!membership.isValid()) {
+      return null;
+    }
+
+    // 2. 고객의 잔액이 충분한지 확인
+    MemberMoneyJpaEntity memberMoneyEntity = getMoneyPort.findMemberMoneyByMembershipId(
+        command.getTargetMembershipId());
+
+    if (memberMoneyEntity.getBalance() < command.getAmount()) {
+      // 2-1. 고객의 잔액이 충분하지 않으면 고객의 연동된 계좌의 잔액이 충분한지 확인
+      // 2-1-1. 연동된 계좌의 잔액이 충분하면 충전 만약 빠지는 금액이 10000원 이하면, 10000원을 빼고, 그이상은 그 금액에 맞춰서 가지고 오기
+
+      // 3 번으로 이동
+
+      // 2-2-2 고객의 연동된 잔액이 충분하지 않으면 throw error
+    }
+
+    // 3. 고객의 머니 빼기
+    decreaseMoneyPort.decreaseMoney(
+        command.getTargetMembershipId(),
+        command.getAmount()
+    );
+
+    // 4. 증액을 위한 "기록". 요청 상태로 MoneyChangingRequest 를 생성한다. (MoneyChangingRequest)
+    return mapper.mapToDomainEntity(increaseMoneyPort.createMoneyChangingRequest(
+            new MoneyChangingRequest.TargetMembershipId(command.getTargetMembershipId()),
+            new MoneyChangingRequest.MoneyChangingType(1),
+            new MoneyChangingRequest.ChangingMoneyAmount(command.getAmount()),
+            new MoneyChangingRequest.MoneyChangingStatus(1),
+            new MoneyChangingRequest.Uuid(UUID.randomUUID().toString())
+        )
+    );
+  }
 }

@@ -5,13 +5,19 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.PersistenceAdapter;
+import me.wane.money.application.port.in.DecreaseMoneyRequestCommand;
+import me.wane.money.application.port.in.DecreaseMoneyRequestUseCase;
+import me.wane.money.application.port.out.DecreaseMoneyPort;
+import me.wane.money.application.port.out.GetMoneyPort;
 import me.wane.money.application.port.out.IncreaseMoneyPort;
 import me.wane.money.domain.MemberMoney;
+import me.wane.money.domain.MemberMoney.MembershipId;
 import me.wane.money.domain.MoneyChangingRequest;
 
 @PersistenceAdapter
 @RequiredArgsConstructor
-public class MoneyChangingRequestPersistenceAdapter implements IncreaseMoneyPort {
+public class MoneyChangingRequestPersistenceAdapter implements IncreaseMoneyPort, GetMoneyPort,
+    DecreaseMoneyPort {
 
   private final SpringDataMoneyChangingRequestRepository moneyChangingRequestRepository;
 
@@ -28,6 +34,14 @@ public class MoneyChangingRequestPersistenceAdapter implements IncreaseMoneyPort
             UUID.randomUUID()
         )
     );
+  }
+
+  @Override
+  public MemberMoneyJpaEntity decreaseMoney(String memberId, int decreaseMoneyAmount) {
+    MemberMoneyJpaEntity memberMoneyJpaEntity = this.findMemberMoneyByMembershipId(memberId);
+
+    memberMoneyJpaEntity.setBalance(memberMoneyJpaEntity.getBalance() - decreaseMoneyAmount);
+    return memberMoneyRepository.save(memberMoneyJpaEntity);
   }
 
   @Override
@@ -48,8 +62,12 @@ public class MoneyChangingRequestPersistenceAdapter implements IncreaseMoneyPort
       return entity;
     }
 
-//
-//        entity.setBalance(entity.getBalance() + increaseMoneyAmount);
-//        return  memberMoneyRepository.save(entity);
   }
+
+  @Override
+  public MemberMoneyJpaEntity findMemberMoneyByMembershipId(String membershipId) {
+    return memberMoneyRepository.findByMembershipId(Long.parseLong(membershipId)).get(0);
+  }
+
+
 }

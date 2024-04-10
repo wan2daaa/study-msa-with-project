@@ -2,9 +2,12 @@ package me.wane.money.adapter.in.web;
 
 import lombok.RequiredArgsConstructor;
 import me.wane.common.WebAdapter;
+import me.wane.money.application.port.in.DecreaseMoneyRequestCommand;
+import me.wane.money.application.port.in.DecreaseMoneyRequestUseCase;
 import me.wane.money.application.port.in.IncreaseMoneyRequestCommand;
 import me.wane.money.application.port.in.IncreaseMoneyRequestUseCase;
 import me.wane.money.domain.MoneyChangingRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class RequestMoneyChangingController {
 
   private final IncreaseMoneyRequestUseCase increaseMoneyRequestUseCase;
+  private final DecreaseMoneyRequestUseCase decreaseMoneyRequestUseCase;
 
   @PostMapping(path = "/money/increase")
   MoneyChangingResultDetail increaseMoneyChangingRequest(@RequestBody IncreaseMoneyChangingRequest request) {
@@ -33,6 +37,7 @@ public class RequestMoneyChangingController {
         moneyChangingRequest.getChangingMoneyAmount());
     return resultDetail;
   }
+
   @PostMapping(path = "/money/increase-asnyc")
   MoneyChangingResultDetail increaseMoneyChangingRequestAsync(@RequestBody IncreaseMoneyChangingRequest request) {
     IncreaseMoneyRequestCommand command = IncreaseMoneyRequestCommand.builder()
@@ -53,18 +58,21 @@ public class RequestMoneyChangingController {
 
 
   @PostMapping(path = "/money/decrease")
-  MoneyChangingResultDetail decreaseMoneyChangingRequest(@RequestBody DecreaseMoneyChangingRequest request) {
-//        RegisterBankAccountCommand command = RegisterBankAccountCommand.builder()
-//                .membershipId(request.getMembershipId())
-//                .bankName(request.getBankName())
-//                .bankAccountNumber(request.getBankAccountNumber())
-//                .isValid(request.isValid())
-//                .build();
+  ResponseEntity<MoneyChangingResultDetail> decreaseMoneyChangingRequest(@RequestBody DecreaseMoneyChangingRequest request) {
+    DecreaseMoneyRequestCommand command = DecreaseMoneyRequestCommand.builder()
+        .targetMembershipId(request.getTargetMembershipId())
+        .amount(request.getAmount())
+        .build();
 
-    // registeredBankAccountUseCase.registerBankAccount(command)
-    // -> MoneyChangingResultDetail
-    // return decreaseMoneyRequestUseCase.decreaseMoneyChangingRequest(command);
-    return null;
+    MoneyChangingRequest moneyChangingRequest = decreaseMoneyRequestUseCase.decreaseMoneyRequest(command);
+
+    // MoneyChangingRequest -> MoneyChangingResultDetail
+    MoneyChangingResultDetail resultDetail = new MoneyChangingResultDetail(
+        moneyChangingRequest.getMoneyChangingRequestId(),
+        1,
+        0,
+        moneyChangingRequest.getChangingMoneyAmount());
+    return ResponseEntity.ok(resultDetail);
   }
 
 }
