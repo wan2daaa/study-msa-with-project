@@ -8,6 +8,8 @@ import me.wane.banking.adapter.out.persistence.RegisteredBankAccountJpaEntity;
 import me.wane.banking.adapter.out.persistence.RegisteredBankAccountMapper;
 import me.wane.banking.application.port.in.RegisterBankAccountCommand;
 import me.wane.banking.application.port.in.RegisterBankAccountUseCase;
+import me.wane.banking.application.port.out.GetMembershipPort;
+import me.wane.banking.application.port.out.MembershipStatus;
 import me.wane.banking.application.port.out.RegisterBankAccountPort;
 import me.wane.banking.application.port.out.RequestBankAccountInfoPort;
 import me.wane.banking.domain.RegisteredBankAccount;
@@ -26,6 +28,7 @@ public class RegisterBankAccountService implements RegisterBankAccountUseCase {
   private final RegisteredBankAccountMapper registeredBankAccountMapper;
 
   private final RequestBankAccountInfoPort requestBankAccountInfoPort;
+  private final GetMembershipPort getMembershipPort;
 
   @Override
   public RegisteredBankAccount registerBankAccount(RegisterBankAccountCommand command) {
@@ -33,7 +36,13 @@ public class RegisterBankAccountService implements RegisterBankAccountUseCase {
     //은행 계좌를 등록해야 하는 서비스 (비즈니스 로직)
 //    command.getMembershipId(); //실제로 존재하는지 안하는지 확인 하는 과정 필요
 
-    // (멤버 서비스도 확인?) 여기서는 skip
+//     멤버 서비스확인
+//     call membership service,
+    MembershipStatus membershipStatus = getMembershipPort.getMembership(command.getMembershipId());
+
+    if (!membershipStatus.isValid()) {
+      return null;
+    }
 
     // 1. 외부 실제 은행에 등록된 계좌인지(정상인지) 확인한다.
     // 외부의 은행에 이 계좌가 정상인지? 확인
