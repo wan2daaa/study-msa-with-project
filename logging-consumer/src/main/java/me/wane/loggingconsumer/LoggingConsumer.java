@@ -38,7 +38,7 @@ public class LoggingConsumer {
         while (true) {
           ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
           for (ConsumerRecord<String, String> record : records) {
-            log.info("Recieved message: {}", record.value());
+            System.out.println("Recieved message: " + record.value());
           }
         }
       } finally {

@@ -66,6 +66,9 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - KAFKA_CLUSTERS_BOOTSTRAPSERVERS=kafka:29092
       - LOGGING_TOPIC=wane.logging.out.stdout
+      - SERVICE_MEMBERSHIP_URL=http://membership-service:8080 #컨테이너 외부의 포트가 아니라 내부의 포트로 작성해야함
+      - TASK_TOPIC=wane.task.topic
+      - TASK_RESULT_TOPIC=wane.task.result.topic
 
   logging-consumer:
     image: study-msa-with-project-logging-consumer:1.0.0
@@ -80,6 +83,20 @@ services:
       - KAFKA_CLUSTERS_BOOTSTRAPSERVERS=kafka:29092
       - LOGGING_TOPIC=wane.logging.out.stdout
 
+  task-consumer:
+    image: study-msa-with-project-task-consumer:1.0.0
+    networks:
+      - pay_network
+    ports:
+      - "8085:8080"
+    depends_on:
+      - kafka
+      - zookeeper
+    environment:
+      - KAFKA_CLUSTERS_BOOTSTRAPSERVERS=kafka:29092
+      - LOGGING_TOPIC=wane.logging.out.stdout
+      - TASK_TOPIC=wane.task.topic
+      - TASK_RESULT_TOPIC=wane.task.result.topic
 
   zookeeper:
     image: 'arm64v8/zookeeper:3.8'
