@@ -2,10 +2,7 @@ package me.wane.money.adapter.in.web;
 
 import lombok.RequiredArgsConstructor;
 import me.wane.common.WebAdapter;
-import me.wane.money.application.port.in.DecreaseMoneyRequestCommand;
-import me.wane.money.application.port.in.DecreaseMoneyRequestUseCase;
-import me.wane.money.application.port.in.IncreaseMoneyRequestCommand;
-import me.wane.money.application.port.in.IncreaseMoneyRequestUseCase;
+import me.wane.money.application.port.in.*;
 import me.wane.money.domain.MoneyChangingRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +16,7 @@ public class RequestMoneyChangingController {
 
   private final IncreaseMoneyRequestUseCase increaseMoneyRequestUseCase;
   private final DecreaseMoneyRequestUseCase decreaseMoneyRequestUseCase;
+  private final CreateMemberMoneyUseCase createMemberMoneyUseCase;
 
   @PostMapping(path = "/money/increase")
   MoneyChangingResultDetail increaseMoneyChangingRequest(@RequestBody IncreaseMoneyChangingRequest request) {
@@ -58,7 +56,8 @@ public class RequestMoneyChangingController {
 
 
   @PostMapping(path = "/money/decrease")
-  ResponseEntity<MoneyChangingResultDetail> decreaseMoneyChangingRequest(@RequestBody DecreaseMoneyChangingRequest request) {
+  ResponseEntity<MoneyChangingResultDetail> decreaseMoneyChangingRequest(
+      @RequestBody DecreaseMoneyChangingRequest request) {
     DecreaseMoneyRequestCommand command = DecreaseMoneyRequestCommand.builder()
         .targetMembershipId(request.getTargetMembershipId())
         .amount(request.getAmount())
@@ -73,6 +72,25 @@ public class RequestMoneyChangingController {
         0,
         moneyChangingRequest.getChangingMoneyAmount());
     return ResponseEntity.ok(resultDetail);
+  }
+
+  @PostMapping("/money/create-memeber-money")
+  void createMemberMoney(@RequestBody CreateMemberMoneyRequest request) {
+    createMemberMoneyUseCase.createMemberMoney(
+        CreateMemberMoneyCommand.builder()
+            .targetMembershipId(request.getTargetMembershipId())
+            .build()
+    );
+  }
+
+  @PostMapping("/money/increase-eda")
+  void increaseMoneyRequestByEvent(@RequestBody IncreaseMoneyChangingRequest request) {
+    IncreaseMoneyRequestCommand command = IncreaseMoneyRequestCommand.builder()
+        .targetMembershipId(request.getTargetMembershipId())
+        .amount(request.getAmount())
+        .build();
+
+    increaseMoneyRequestUseCase.increaseMoneyRequestByEvent(command);
   }
 
 }

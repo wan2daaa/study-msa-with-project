@@ -3,32 +3,30 @@ package me.wane.banking.application.service;
 import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import me.wane.banking.adapter.axon.command.CreateFirmbankingRequestCommand;
+import me.wane.banking.adapter.axon.command.UpdateFirmbankingRequestCommand;
 import me.wane.banking.adapter.out.external.bank.ExternalFirmbankingRequest;
 import me.wane.banking.adapter.out.external.bank.FirmbankingResult;
 import me.wane.banking.adapter.out.persistence.FirmbankingRequestJpaEntity;
 import me.wane.banking.adapter.out.persistence.FirmbankingRequestMapper;
-import me.wane.banking.application.port.in.RequestFirmbankingCommand;
-import me.wane.banking.application.port.in.RequestFirmbankingUseCase;
+import me.wane.banking.application.port.in.*;
 import me.wane.banking.application.port.out.RequestExternalFirmbankingPort;
 import me.wane.banking.application.port.out.RequestFirmbankingPort;
 import me.wane.banking.domain.FirmbankingRequest;
-import me.wane.banking.domain.FirmbankingRequest.FirmbankingStatus;
-import me.wane.banking.domain.FirmbankingRequest.FromBankAccountNumber;
-import me.wane.banking.domain.FirmbankingRequest.FromBankName;
-import me.wane.banking.domain.FirmbankingRequest.MoneyAmount;
-import me.wane.banking.domain.FirmbankingRequest.ToBankAccountNumber;
-import me.wane.banking.domain.FirmbankingRequest.ToBankName;
+import me.wane.banking.domain.FirmbankingRequest.*;
 import me.wane.common.UseCase;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 
 @UseCase
 @RequiredArgsConstructor
 @Transactional
-public class RequestFirmbankingService implements RequestFirmbankingUseCase {
+public class RequestFirmbankingService implements RequestFirmbankingUseCase, UpdateFirmbankingUseCase {
 
   private final FirmbankingRequestMapper mapper;
   private final RequestFirmbankingPort requestFirmbankingPort;
 
   private final RequestExternalFirmbankingPort requestExternalFirmbankingPort;
+  private final CommandGateway gateway;
 
   @Override
   public FirmbankingRequest requestFirmbanking(RequestFirmbankingCommand command) {
@@ -43,7 +41,8 @@ public class RequestFirmbankingService implements RequestFirmbankingUseCase {
         new ToBankName(command.getToBankName()),
         new ToBankAccountNumber(command.getToBankAccountNumber()),
         new MoneyAmount(command.getMoneyAmount()),
-        new FirmbankingStatus(0)
+        new FirmbankingStatus(0),
+        new AggregateIdentifier("")
     );
 
     // 2. 외부 은행에 펌뱅킹 요청
@@ -72,5 +71,80 @@ public class RequestFirmbankingService implements RequestFirmbankingUseCase {
     return mapper.mapToDomainEntity(
         requestFirmbankingPort.modifyFirmbankingRequest(requestedEntity), uuid
     );
+  }
+
+  @Override
+  public void requestFirmbankingByEvent(RequestFirmbankingCommand command) {
+    CreateFirmbankingRequestCommand createFirmbankingRequestCommand = CreateFirmbankingRequestCommand.builder()
+        .fromBankName(command.getFromBankName())
+        .fromBankAccountNumber(command.getFromBankAccountNumber())
+        .toBankName(command.getToBankName())
+        .toBankAccountNumber(command.getToBankAccountNumber())
+        .moneyAmount(command.getMoneyAmount())
+        .build();
+    // Command -> Event Sourcing
+    gateway.send(createFirmbankingRequestCommand)
+        .whenComplete((result, throwable) -> {
+          if (throwable != null) {
+            System.out.println("throwable = " + throwable);
+            throw new RuntimeException(throwable);
+          } else {
+            // 성공
+            // Request Firmbanking 의 DB save
+            System.out.println("result = " + result);
+
+            FirmbankingRequestJpaEntity requestedEntity = requestFirmbankingPort.createFirmbankingRequest(
+                new FromBankName(command.getFromBankName()),
+                new FromBankAccountNumber(command.getFromBankAccountNumber()),
+                new ToBankName(command.getToBankName()),
+                new ToBankAccountNumber(command.getToBankAccountNumber()),
+                new MoneyAmount(command.getMoneyAmount()),
+                new FirmbankingStatus(0),
+                new AggregateIdentifier(result.toString())
+            );
+
+            FirmbankingResult firmbankingResult = requestExternalFirmbankingPort.requestExternalFirmbanking(
+                new ExternalFirmbankingRequest(
+                    command.getFromBankName(),
+                    command.getFromBankAccountNumber(),
+                    command.getToBankName(),
+                    command.getToBankAccountNumber()
+                )
+            );
+            if (firmbankingResult.getResultCode() == 0) {
+              // 성공
+              requestedEntity.setFirmbankingStatus(1);
+            } else {
+              requestedEntity.setFirmbankingStatus(2);
+            }
+
+            requestFirmbankingPort.modifyFirmbankingRequest(requestedEntity);
+          }
+        });
+
+
+
+  }
+
+  @Override
+  public void updateFirmbankingByEvent(UpdateFirmbankingCommand command) {
+    UpdateFirmbankingRequestCommand updateFirmbankingRequestCommand =
+        new UpdateFirmbankingRequestCommand(command.getFirmbankingAggregateIdentifier(), command.getStatus());
+
+    gateway.send(updateFirmbankingRequestCommand)
+        .whenComplete((result, throwable) -> {
+
+          if (throwable != null) {
+            System.out.println("throwable = " + throwable);
+            throw new RuntimeException(throwable);
+          } else {
+            System.out.println("result = " + result.toString());
+            FirmbankingRequestJpaEntity entity = requestFirmbankingPort.getFirmbankingRequest(
+                new AggregateIdentifier(command.getFirmbankingAggregateIdentifier()));
+
+            entity.setFirmbankingStatus(command.getStatus());
+            requestFirmbankingPort.modifyFirmbankingRequest(entity);
+          }
+        });
   }
 }

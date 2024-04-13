@@ -1,5 +1,22 @@
 version: '1'
 services:
+  axon-server:
+    container_name: axon-server
+    image: axoniq/axonserver
+    networks:
+      - pay_network
+    ports:
+      - '8024:8024'
+      - '8124:8124'
+      - '8224:8224'
+    volumes:
+      - axonserver-data:/axonserver/data
+      - axonserver-events:/axonserver/events
+      - axonserver-log:/axonserver/log
+      - axonserver-config:/axonserver/config:ro
+
+
+
   mysql:
     image: mysql:8.0
     networks:
@@ -42,6 +59,10 @@ services:
     depends_on:
       - mysql
     environment:
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+      - AXON_SERIALIZER_EVENTS=jackson
+      - AXON_SERIALIZER_MESSAGES=jackson
+      - AXON_SERIALIZER_GENERAL=xstream
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pay?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=mysqluser
       - SPRING_DATASOURCE_PASSWORD=mysqlpw
@@ -59,6 +80,10 @@ services:
     depends_on:
       - mysql
     environment:
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+      - AXON_SERIALIZER_EVENTS=jackson
+      - AXON_SERIALIZER_MESSAGES=jackson
+      - AXON_SERIALIZER_GENERAL=xstream
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pay?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=mysqluser
       - SPRING_DATASOURCE_PASSWORD=mysqlpw
@@ -169,7 +194,31 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
 
-
+volumes:
+  axonserver-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/axon-server-se/data
+      o: bind
+  axonserver-events:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/axon-server-se/events
+      o: bind
+  axonserver-log:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/axon-server-se/log
+      o: bind
+  axonserver-config:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/axon-server-se/config
+      o: bind
 
 networks:
   pay_network:

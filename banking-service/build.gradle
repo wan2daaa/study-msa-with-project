@@ -40,6 +40,10 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     runtimeOnly 'com.mysql:mysql-connector-j'
 //    runtimeOnly 'com.h2database:h2'
+
+
+    implementation group: 'org.axonframework', name: 'axon-configuration', version: '4.9.3'
+    implementation group: 'org.axonframework', name: 'axon-spring-boot-starter', version: '4.9.3'
 }
 
 tasks.named('test') {

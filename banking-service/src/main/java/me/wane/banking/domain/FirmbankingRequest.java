@@ -25,6 +25,8 @@ public class FirmbankingRequest {
 
   @Getter private final UUID uuid;
 
+  @Getter private final String aggregateIdentifier;
+
 
   public static FirmbankingRequest generateFirmbankingRequest (
       FirmbankingRequestId firmbankingRequestId,
@@ -34,7 +36,8 @@ public class FirmbankingRequest {
       ToBankAccountNumber toBankAccountNumber,
       MoneyAmount moneyAmount,
       FirmbankingStatus firmbankingStatus,
-      UUID uuid
+      UUID uuid,
+      AggregateIdentifier aggregateIdentifier
   ){
     return new FirmbankingRequest(
         firmbankingRequestId.getFirmbankingRequestId(),
@@ -44,7 +47,8 @@ public class FirmbankingRequest {
         toBankAccountNumber.getToBankAccountNumber(),
         moneyAmount.getMoneyAmount(),
         firmbankingStatus.firmBankingStatus,
-        uuid
+        uuid,
+        aggregateIdentifier.aggregateIdentifier
     );
   }
 
@@ -103,4 +107,13 @@ public class FirmbankingRequest {
     }
     int firmBankingStatus;
   }
+
+  @Value
+  public static class AggregateIdentifier {
+    public AggregateIdentifier(String value) {
+      this.aggregateIdentifier = value;
+    }
+    String aggregateIdentifier;
+  }
+
 }

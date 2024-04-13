@@ -4,30 +4,24 @@ import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import me.wane.common.CountDownLatchManager;
-import me.wane.common.RechargingMoneyTask;
-import me.wane.common.SubTask;
-import me.wane.common.UseCase;
+import me.wane.common.*;
+import me.wane.money.adapter.axon.command.IncreaseMemberMoneyCommand;
+import me.wane.money.adapter.axon.command.MemberMoneyCreatedCommand;
 import me.wane.money.adapter.out.persistence.MemberMoneyJpaEntity;
 import me.wane.money.adapter.out.persistence.MoneyChangingRequestMapper;
-import me.wane.money.application.port.in.DecreaseMoneyRequestCommand;
-import me.wane.money.application.port.in.DecreaseMoneyRequestUseCase;
-import me.wane.money.application.port.in.IncreaseMoneyRequestCommand;
-import me.wane.money.application.port.in.IncreaseMoneyRequestUseCase;
-import me.wane.money.application.port.out.DecreaseMoneyPort;
-import me.wane.money.application.port.out.GetMembershipPort;
-import me.wane.money.application.port.out.GetMoneyPort;
-import me.wane.money.application.port.out.IncreaseMoneyPort;
-import me.wane.money.application.port.out.MembershipStatus;
-import me.wane.money.application.port.out.SendRechargingMoneyTaskPort;
+import me.wane.money.application.port.in.*;
+import me.wane.money.application.port.out.*;
 import me.wane.money.domain.MemberMoney;
+import me.wane.money.domain.MemberMoney.MembershipId;
+import me.wane.money.domain.MemberMoney.MoneyAggregateIdentifier;
 import me.wane.money.domain.MoneyChangingRequest;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 
 @RequiredArgsConstructor
 @Transactional
 @UseCase
 public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
-    DecreaseMoneyRequestUseCase {
+    DecreaseMoneyRequestUseCase, CreateMemberMoneyUseCase {
 
   private final IncreaseMoneyPort increaseMoneyPort;
   private final DecreaseMoneyPort decreaseMoneyPort;
@@ -36,6 +30,10 @@ public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
   private final GetMembershipPort getMembershipPort;
   private final SendRechargingMoneyTaskPort sendRechargingMoneyTaskPort;
   private final CountDownLatchManager countDownLatchManager;
+
+  private final CommandGateway commandGateway;
+  private final CreateMemberMoneyPort createMemberMoneyPort;
+  private final GetMemberMemberMoneyPort getMemberMemberMoneyPort;
 
   @Override
   public MoneyChangingRequest increaseMoneyRequest(IncreaseMoneyRequestCommand command) {
@@ -193,5 +191,52 @@ public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
             new MoneyChangingRequest.Uuid(UUID.randomUUID().toString())
         )
     );
+  }
+
+  @Override
+  public void createMemberMoney(CreateMemberMoneyCommand command) {
+    MemberMoneyCreatedCommand axonCommand = new MemberMoneyCreatedCommand(command.getTargetMembershipId());
+    commandGateway.send(axonCommand).whenComplete((result, throwable) -> {
+      if (throwable != null) {
+        System.out.println("throwable = " + throwable);
+        ;
+        throw new RuntimeException(throwable);
+      } else {
+        System.out.println("result = " + result);
+        createMemberMoneyPort.createMemberMoney(
+            new MembershipId(command.getTargetMembershipId()),
+            new MoneyAggregateIdentifier(result.toString())
+        );
+      }
+    });
+
+
+  }
+
+  @Override
+  public void increaseMoneyRequestByEvent(IncreaseMoneyRequestCommand command) {
+    MemberMoneyJpaEntity memberMoneyJpaEntity = getMemberMemberMoneyPort.getMemberMoney(
+        new MembershipId(command.getTargetMembershipId())
+    );
+
+    // command
+    commandGateway.send(IncreaseMemberMoneyCommand.builder()
+            .aggregateIdentifier(memberMoneyJpaEntity.getAggregateIdentifier())
+            .membershipId(command.getTargetMembershipId())
+            .amount(command.getAmount())
+            .build()
+        )
+        .whenComplete((result, throwable) -> {
+          if (throwable != null) {
+            System.out.println("throwable = " + throwable);
+            throw new RuntimeException(throwable);
+          } else {
+            // Increase money 이벤트 소싱 완료 -> money increasing event
+            increaseMoneyPort.increaseMoney(
+                new MemberMoney.MembershipId(command.getTargetMembershipId())
+                , command.getAmount());
+          }
+        });
+
   }
 }

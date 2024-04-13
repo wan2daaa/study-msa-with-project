@@ -1,6 +1,7 @@
 package me.wane.banking.adapter.out.persistence;
 
 import me.wane.banking.domain.FirmbankingRequest;
+import me.wane.banking.domain.FirmbankingRequest.AggregateIdentifier;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -16,7 +17,8 @@ public class FirmbankingRequestMapper {
         new FirmbankingRequest.ToBankAccountNumber(registeredBankAccountJpaEntity.getToBankAccountNumber()),
         new FirmbankingRequest.MoneyAmount(registeredBankAccountJpaEntity.getMoneyAmount()),
         new FirmbankingRequest.FirmbankingStatus(registeredBankAccountJpaEntity.getFirmbankingStatus()),
-        uuid
+        uuid,
+        new AggregateIdentifier(registeredBankAccountJpaEntity.getAggregateIdentifier())
     );
   }
 }

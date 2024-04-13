@@ -8,4 +8,5 @@ public interface IncreaseMoneyRequestUseCase {
 
   MoneyChangingRequest increaseMoneyRequestAsync(IncreaseMoneyRequestCommand command);
 
+  void increaseMoneyRequestByEvent(IncreaseMoneyRequestCommand command);
 }

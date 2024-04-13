@@ -1,19 +1,10 @@
 package me.wane.banking.adapter.out.persistence;
 
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import me.wane.banking.application.port.out.RegisterBankAccountPort;
 import me.wane.banking.application.port.out.RequestFirmbankingPort;
-import me.wane.banking.domain.FirmbankingRequest.FirmbankingStatus;
-import me.wane.banking.domain.FirmbankingRequest.FromBankAccountNumber;
-import me.wane.banking.domain.FirmbankingRequest.FromBankName;
-import me.wane.banking.domain.FirmbankingRequest.MoneyAmount;
-import me.wane.banking.domain.FirmbankingRequest.ToBankAccountNumber;
-import me.wane.banking.domain.FirmbankingRequest.ToBankName;
-import me.wane.banking.domain.RegisteredBankAccount.BankAccountNumber;
-import me.wane.banking.domain.RegisteredBankAccount.BankName;
-import me.wane.banking.domain.RegisteredBankAccount.LinkedStatusIsValid;
-import me.wane.banking.domain.RegisteredBankAccount.MembershipId;
+import me.wane.banking.domain.FirmbankingRequest.*;
 import me.wane.common.PersistenceAdapter;
 
 @RequiredArgsConstructor
@@ -27,7 +18,7 @@ public class FirmbankingRequestPersistenceAdapter implements RequestFirmbankingP
   public FirmbankingRequestJpaEntity createFirmbankingRequest(FromBankName fromBankName,
       FromBankAccountNumber fromBankAccountNumber, ToBankName toBankName,
       ToBankAccountNumber toBankAccountNumber, MoneyAmount moneyAmount,
-      FirmbankingStatus firmbankingStatus) {
+      FirmbankingStatus firmbankingStatus, AggregateIdentifier aggregateIdentifier) {
     FirmbankingRequestJpaEntity entity = firmbankingRequestRepository.save(
         new FirmbankingRequestJpaEntity(
             fromBankName.getFromBankName(),
@@ -36,7 +27,8 @@ public class FirmbankingRequestPersistenceAdapter implements RequestFirmbankingP
             toBankAccountNumber.getToBankAccountNumber(),
             moneyAmount.getMoneyAmount(),
             firmbankingStatus.getFirmBankingStatus(),
-            UUID.randomUUID()
+            UUID.randomUUID(),
+            aggregateIdentifier.getAggregateIdentifier()
         ));
 
     return entity;
@@ -45,5 +37,16 @@ public class FirmbankingRequestPersistenceAdapter implements RequestFirmbankingP
   @Override
   public FirmbankingRequestJpaEntity modifyFirmbankingRequest(FirmbankingRequestJpaEntity entity) {
     return firmbankingRequestRepository.save(entity);
+  }
+
+  @Override
+  public FirmbankingRequestJpaEntity getFirmbankingRequest(AggregateIdentifier aggregateIdentifier) {
+    List<FirmbankingRequestJpaEntity> entityList = firmbankingRequestRepository.findByAggregateIdentifier(
+        aggregateIdentifier.getAggregateIdentifier());
+    if (entityList.isEmpty()) {
+      return null;
+    }
+
+    return entityList.get(0);
   }
 }
