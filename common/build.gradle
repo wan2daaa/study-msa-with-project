@@ -18,6 +18,9 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
 
 
+    implementation group: 'org.axonframework', name: 'axon-configuration', version: '4.9.3'
+    implementation group: 'org.axonframework', name: 'axon-spring-boot-starter', version: '4.9.3'
+
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.kafka:spring-kafka-test'

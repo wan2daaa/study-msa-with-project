@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import me.wane.common.*;
 import me.wane.money.adapter.axon.command.IncreaseMemberMoneyCommand;
 import me.wane.money.adapter.axon.command.MemberMoneyCreatedCommand;
+import me.wane.money.adapter.axon.command.RechargingMoneyRequestCreateCommand;
+import me.wane.money.adapter.axon.event.RechargingRequestCreatedEvent;
 import me.wane.money.adapter.out.persistence.MemberMoneyJpaEntity;
 import me.wane.money.adapter.out.persistence.MoneyChangingRequestMapper;
 import me.wane.money.application.port.in.*;
@@ -216,27 +218,53 @@ public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
   @Override
   public void increaseMoneyRequestByEvent(IncreaseMoneyRequestCommand command) {
     MemberMoneyJpaEntity memberMoneyJpaEntity = getMemberMemberMoneyPort.getMemberMoney(
-        new MembershipId(command.getTargetMembershipId())
-    );
+        new MembershipId(command.getTargetMembershipId()));
+    String memberMoneyAggregateIdentifier = memberMoneyJpaEntity.getAggregateIdentifier();
 
-    // command
-    commandGateway.send(IncreaseMemberMoneyCommand.builder()
-            .aggregateIdentifier(memberMoneyJpaEntity.getAggregateIdentifier())
-            .membershipId(command.getTargetMembershipId())
-            .amount(command.getAmount())
-            .build()
-        )
-        .whenComplete((result, throwable) -> {
-          if (throwable != null) {
-            System.out.println("throwable = " + throwable);
-            throw new RuntimeException(throwable);
-          } else {
-            // Increase money 이벤트 소싱 완료 -> money increasing event
-            increaseMoneyPort.increaseMoney(
-                new MemberMoney.MembershipId(command.getTargetMembershipId())
-                , command.getAmount());
-          }
-        });
+    // Saga의 시작을 나타내는 Command
+    // RechargingMoneyRequestCreateCommand // membermoney의 정보를 바꾸는 커맨드
+    commandGateway.send(new RechargingMoneyRequestCreateCommand(
+        memberMoneyAggregateIdentifier,
+        UUID.randomUUID().toString(),
+        command.getTargetMembershipId(),
+        command.getAmount()
+    )).whenComplete((result, throwable) -> {
+      if (throwable != null) {
+        System.out.println("throwable = " + throwable);
+        throw new RuntimeException(throwable);
+      } else {
+        System.out.println("result = " + result);
+//        increaseMoneyPort.increaseMoney(
+//            new MemberMoney.MembershipId(command.getTargetMembershipId())
+//            , command.getAmount());
+      }
+    });
+
+
+
+
+//    MemberMoneyJpaEntity memberMoneyJpaEntity = getMemberMemberMoneyPort.getMemberMoney(
+//        new MembershipId(command.getTargetMembershipId())
+//    );
+//
+//    // command
+//    commandGateway.send(IncreaseMemberMoneyCommand.builder()
+//            .aggregateIdentifier(memberMoneyJpaEntity.getAggregateIdentifier())
+//            .membershipId(command.getTargetMembershipId())
+//            .amount(command.getAmount())
+//            .build()
+//        )
+//        .whenComplete((result, throwable) -> {
+//          if (throwable != null) {
+//            System.out.println("throwable = " + throwable);
+//            throw new RuntimeException(throwable);
+//          } else {
+//            // Increase money 이벤트 소싱 완료 -> money increasing event
+//            increaseMoneyPort.increaseMoney(
+//                new MemberMoney.MembershipId(command.getTargetMembershipId())
+//                , command.getAmount());
+//          }
+//        });
 
   }
 }

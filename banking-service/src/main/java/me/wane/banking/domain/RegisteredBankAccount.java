@@ -18,7 +18,8 @@ public class RegisteredBankAccount {
   private final String bankAccountNumber;
   @Getter
   private final boolean linkedStatusIsValid;
-
+  @Getter
+  private String aggregateIdentifier;
   //일반적으로
   //member 정의
   //getter, setter @Data
@@ -34,14 +35,16 @@ public class RegisteredBankAccount {
       MembershipId membershipId,
       BankName bankName,
       BankAccountNumber bankAccountNumber,
-      LinkedStatusIsValid linkedStatusIsValid
+      LinkedStatusIsValid linkedStatusIsValid,
+      AggregateIdentifier aggregateIdentifier
   ) {
     return new RegisteredBankAccount(
         registeredBankAccountId.registeredBankAccountId,
         membershipId.membershipId,
         bankName.bankName,
         bankAccountNumber.bankAccountNumber,
-        linkedStatusIsValid.linkedStatusIsValid
+        linkedStatusIsValid.linkedStatusIsValid,
+        aggregateIdentifier.aggregateIdentifier
     );
   }
 
@@ -94,6 +97,14 @@ public class RegisteredBankAccount {
 
     boolean linkedStatusIsValid;
   }
+  @Value
+  public static class AggregateIdentifier {
 
+    public AggregateIdentifier(String value) {
+      this.aggregateIdentifier = value;
+    }
+
+    String aggregateIdentifier;
+  }
 
 }

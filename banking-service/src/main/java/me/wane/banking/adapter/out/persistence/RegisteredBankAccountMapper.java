@@ -14,7 +14,8 @@ public class RegisteredBankAccountMapper {
         new MembershipId(registeredBankAccountJpaEntity.getMembershipId()),
         new me.wane.banking.domain.RegisteredBankAccount.BankName(registeredBankAccountJpaEntity.getBankName()),
         new me.wane.banking.domain.RegisteredBankAccount.BankAccountNumber(registeredBankAccountJpaEntity.getBankAccountNumber()),
-        new me.wane.banking.domain.RegisteredBankAccount.LinkedStatusIsValid(registeredBankAccountJpaEntity.isLinkedStatusIsValid())
+        new me.wane.banking.domain.RegisteredBankAccount.LinkedStatusIsValid(registeredBankAccountJpaEntity.isLinkedStatusIsValid()),
+        new me.wane.banking.domain.RegisteredBankAccount.AggregateIdentifier(registeredBankAccountJpaEntity.getAggregateIdentifier())
     );
   }
 

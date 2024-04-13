@@ -2,6 +2,7 @@ package me.wane.banking.application.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import me.wane.banking.adapter.axon.command.CreateRegisteredBankAccountCommand;
 import me.wane.banking.adapter.out.external.bank.BankAccount;
 import me.wane.banking.adapter.out.external.bank.GetBankAccountRequest;
 import me.wane.banking.adapter.out.persistence.RegisteredBankAccountJpaEntity;
@@ -13,11 +14,9 @@ import me.wane.banking.application.port.out.MembershipStatus;
 import me.wane.banking.application.port.out.RegisterBankAccountPort;
 import me.wane.banking.application.port.out.RequestBankAccountInfoPort;
 import me.wane.banking.domain.RegisteredBankAccount;
-import me.wane.banking.domain.RegisteredBankAccount.BankAccountNumber;
-import me.wane.banking.domain.RegisteredBankAccount.BankName;
-import me.wane.banking.domain.RegisteredBankAccount.LinkedStatusIsValid;
-import me.wane.banking.domain.RegisteredBankAccount.MembershipId;
+import me.wane.banking.domain.RegisteredBankAccount.*;
 import me.wane.common.UseCase;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 
 @RequiredArgsConstructor
 @Transactional
@@ -29,6 +28,8 @@ public class RegisterBankAccountService implements RegisterBankAccountUseCase {
 
   private final RequestBankAccountInfoPort requestBankAccountInfoPort;
   private final GetMembershipPort getMembershipPort;
+
+  private final CommandGateway commandGateway;
 
   @Override
   public RegisteredBankAccount registerBankAccount(RegisterBankAccountCommand command) {
@@ -64,8 +65,8 @@ public class RegisterBankAccountService implements RegisterBankAccountUseCase {
           new MembershipId(command.getMembershipId()),
           new BankName(command.getBankName()),
           new BankAccountNumber(command.getBankAccountNumber()),
-          new LinkedStatusIsValid(command.isValid())
-      );
+          new LinkedStatusIsValid(command.isValid()),
+          new AggregateIdentifier(""));
 
       return registeredBankAccountMapper.mapToDomainEntity(jpaEntity);
     } else {
@@ -74,7 +75,30 @@ public class RegisterBankAccountService implements RegisterBankAccountUseCase {
 
   }
 
+  @Override
+  public void registerBankAccountByEvent(RegisterBankAccountCommand command) {
+    commandGateway.send(new CreateRegisteredBankAccountCommand(command.getMembershipId(), command.getBankName(),
+            command.getBankAccountNumber()))
+        .whenComplete(
+            (result, throwable) -> {
+              if (throwable != null) {
+                throwable.printStackTrace();
+              } else {
+                // 정상적으로 이벤트를 소싱.
+                // -> registeredBankAccount를 insert
+                registerBankAccountPort.createRegisteredBankAccount(
+                    new MembershipId(command.getMembershipId()),
+                    new BankName(command.getBankName()),
+                    new BankAccountNumber(command.getBankAccountNumber()),
+                    new LinkedStatusIsValid(command.isValid()),
+                    new AggregateIdentifier(result.toString())
+                );
 
+              }
+            }
+        );
+
+  }
 
 
 }

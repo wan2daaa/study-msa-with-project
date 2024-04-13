@@ -92,6 +92,7 @@ services:
       - KAFKA_CLUSTERS_BOOTSTRAPSERVERS=kafka:29092
       - LOGGING_TOPIC=wane.logging.out.stdout
       - SERVICE_MEMBERSHIP_URL=http://membership-service:8080 #컨테이너 외부의 포트가 아니라 내부의 포트로 작성해야함
+      - SERVICE_BANKING_URL=http://banking-service:8080 #컨테이너 외부의 포트가 아니라 내부의 포트로 작성해야함
       - TASK_TOPIC=wane.task.topic
       - TASK_RESULT_TOPIC=wane.task.result.topic
 
