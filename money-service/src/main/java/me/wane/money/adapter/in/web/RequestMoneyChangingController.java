@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import me.wane.common.WebAdapter;
 import me.wane.money.application.port.in.*;
 import me.wane.money.domain.MoneyChangingRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,22 +55,16 @@ public class RequestMoneyChangingController {
 
 
   @PostMapping(path = "/money/decrease")
-  ResponseEntity<MoneyChangingResultDetail> decreaseMoneyChangingRequest(
+  MoneyChangingResultDetail decreaseMoneyChangingRequest(
       @RequestBody DecreaseMoneyChangingRequest request) {
-    DecreaseMoneyRequestCommand command = DecreaseMoneyRequestCommand.builder()
+    IncreaseMoneyRequestCommand command = IncreaseMoneyRequestCommand.builder()
         .targetMembershipId(request.getTargetMembershipId())
-        .amount(request.getAmount())
+        .amount(request.getAmount() * -1 )
         .build();
 
-    MoneyChangingRequest moneyChangingRequest = decreaseMoneyRequestUseCase.decreaseMoneyRequest(command);
+     increaseMoneyRequestUseCase.increaseMoneyRequestAsync(command);
 
-    // MoneyChangingRequest -> MoneyChangingResultDetail
-    MoneyChangingResultDetail resultDetail = new MoneyChangingResultDetail(
-        moneyChangingRequest.getMoneyChangingRequestId(),
-        1,
-        0,
-        moneyChangingRequest.getChangingMoneyAmount());
-    return ResponseEntity.ok(resultDetail);
+    return null;
   }
 
   @PostMapping("/money/create-memeber-money")
