@@ -2,6 +2,7 @@ package me.wane.money.application.service;
 
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.*;
@@ -9,7 +10,9 @@ import me.wane.money.adapter.axon.command.IncreaseMemberMoneyCommand;
 import me.wane.money.adapter.axon.command.MemberMoneyCreatedCommand;
 import me.wane.money.adapter.axon.command.RechargingMoneyRequestCreateCommand;
 import me.wane.money.adapter.axon.event.RechargingRequestCreatedEvent;
+import me.wane.money.adapter.in.web.FindMemberMoneyListByMembershipIdsCommand;
 import me.wane.money.adapter.out.persistence.MemberMoneyJpaEntity;
+import me.wane.money.adapter.out.persistence.MemberMoneyMapper;
 import me.wane.money.adapter.out.persistence.MoneyChangingRequestMapper;
 import me.wane.money.application.port.in.*;
 import me.wane.money.application.port.out.*;
@@ -29,6 +32,7 @@ public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
   private final DecreaseMoneyPort decreaseMoneyPort;
   private final GetMoneyPort getMoneyPort;
   private final MoneyChangingRequestMapper mapper;
+  private final MemberMoneyMapper memberMoneyMapper;
   private final GetMembershipPort getMembershipPort;
   private final SendRechargingMoneyTaskPort sendRechargingMoneyTaskPort;
   private final CountDownLatchManager countDownLatchManager;
@@ -36,6 +40,8 @@ public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
   private final CommandGateway commandGateway;
   private final CreateMemberMoneyPort createMemberMoneyPort;
   private final GetMemberMemberMoneyPort getMemberMemberMoneyPort;
+
+  private final GetMemberMoneyPort getMemberMoneyPort;
 
   @Override
   public MoneyChangingRequest increaseMoneyRequest(IncreaseMoneyRequestCommand command) {
@@ -266,5 +272,18 @@ public class ChangeMoneyRequestService implements IncreaseMoneyRequestUseCase,
 //          }
 //        });
 
+  }
+
+  @Override
+  public List<MemberMoney> findMemberMoneyListByMembershipIds(FindMemberMoneyListByMembershipIdsCommand command) {
+    List<MemberMoneyJpaEntity> entityList = getMemberMoneyPort.getMoneyListByMembershipIds(
+        command.getMembershipIds());
+
+    List<MemberMoney> memberMoneyList = new ArrayList<>();
+    for (MemberMoneyJpaEntity entity : entityList) {
+      memberMoneyList.add(memberMoneyMapper.mapToDomainEntity(entity));
+    }
+
+    return memberMoneyList;
   }
 }

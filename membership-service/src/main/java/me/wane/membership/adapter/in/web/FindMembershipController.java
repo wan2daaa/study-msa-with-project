@@ -1,8 +1,10 @@
 package me.wane.membership.adapter.in.web;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.WebAdapter;
 import me.wane.membership.application.port.in.FindMembershipCommand;
+import me.wane.membership.application.port.in.FindMembershipListByAddressCommand;
 import me.wane.membership.application.port.in.FindMembershipUseCase;
 import me.wane.membership.domain.Membership;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +27,15 @@ public class FindMembershipController {
         .build();
 
     return ResponseEntity.ok(findMembershipUseCase.findMembership(command));
+  }
+
+  @GetMapping("/membership/address/{addressName}")
+  ResponseEntity<List<Membership>> findMembershipByAddress(@PathVariable String addressName) {
+
+    FindMembershipListByAddressCommand command = FindMembershipListByAddressCommand.builder()
+        .address(addressName)
+        .build();
+
+    return ResponseEntity.ok(findMembershipUseCase.findMembershipListByAddress(command));
   }
 }

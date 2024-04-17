@@ -2,9 +2,8 @@ package me.wane.remittance.adapter.out.service.money;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.http.HttpResponse;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.CommonHttpClient;
 import me.wane.common.ExternalSystemAdapter;
@@ -51,11 +50,14 @@ public class MoneyServiceAdapter implements MoneyPort {
 
     try {
       String body = mapper.writeValueAsString(requestBody);
-      CompletableFuture<HttpResponse<String>> responseCompletableFuture = commonHttpClient.sendPostRequest(
+      HttpResponse<String> httpResponse = commonHttpClient.sendPostRequest(
           url, body);
 
-      return responseCompletableFuture.get().statusCode() == 200;
-    } catch (JsonProcessingException | InterruptedException | ExecutionException e) {
+      return httpResponse.statusCode() == 200;
+//      return true;
+    } catch (JsonProcessingException | InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
 
@@ -71,11 +73,11 @@ public class MoneyServiceAdapter implements MoneyPort {
 
     try {
       String body = mapper.writeValueAsString(requestBody);
-      CompletableFuture<HttpResponse<String>> responseCompletableFuture = commonHttpClient.sendPostRequest(
+      HttpResponse<String> httpResponse = commonHttpClient.sendPostRequest(
           url, body);
 
-      return responseCompletableFuture.get().statusCode() == 200;
-    } catch (JsonProcessingException | InterruptedException | ExecutionException e) {
+      return httpResponse.statusCode() == 200;
+    } catch (InterruptedException | IOException e) {
       throw new RuntimeException(e);
     }
 

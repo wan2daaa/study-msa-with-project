@@ -1,12 +1,12 @@
 package me.wane.money.adapter.in.web;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.WebAdapter;
 import me.wane.money.application.port.in.*;
+import me.wane.money.domain.MemberMoney;
 import me.wane.money.domain.MoneyChangingRequest;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @WebAdapter
 @RequiredArgsConstructor
@@ -84,6 +84,15 @@ public class RequestMoneyChangingController {
         .build();
 
     increaseMoneyRequestUseCase.increaseMoneyRequestByEvent(command);
+  }
+
+  @PostMapping("/money/member-money")
+  List<MemberMoney> findMemberMoneyListByMembershipIds(@RequestBody FindMemberMoneyListByMembershipIdsCommand request) {
+    FindMemberMoneyListByMembershipIdsCommand command = FindMemberMoneyListByMembershipIdsCommand.builder()
+        .membershipIds(request.getMembershipIds())
+        .build();
+
+    return increaseMoneyRequestUseCase.findMemberMoneyListByMembershipIds(command);
   }
 
 }

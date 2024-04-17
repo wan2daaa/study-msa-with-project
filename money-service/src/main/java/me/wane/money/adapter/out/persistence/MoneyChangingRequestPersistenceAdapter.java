@@ -14,7 +14,7 @@ import me.wane.money.domain.MoneyChangingRequest;
 @PersistenceAdapter
 @RequiredArgsConstructor
 public class MoneyChangingRequestPersistenceAdapter implements IncreaseMoneyPort, GetMoneyPort,
-    DecreaseMoneyPort, CreateMemberMoneyPort, GetMemberMemberMoneyPort {
+    DecreaseMoneyPort, CreateMemberMoneyPort, GetMemberMemberMoneyPort, GetMemberMoneyPort {
 
   private final SpringDataMoneyChangingRequestRepository moneyChangingRequestRepository;
 
@@ -100,5 +100,14 @@ public class MoneyChangingRequestPersistenceAdapter implements IncreaseMoneyPort
     }
 
     return entityList.get(0);
+  }
+
+  @Override
+  public List<MemberMoneyJpaEntity> getMoneyListByMembershipIds(List<String> membershipIds) {
+    return memberMoneyRepository.findByMembershipIds(convertMembershipIds(membershipIds));
+  }
+
+  private List<Long> convertMembershipIds(List<String> membershipIds) {
+    return membershipIds.stream().map(Long::parseLong).toList();
   }
 }

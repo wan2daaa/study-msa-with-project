@@ -1,5 +1,6 @@
 package me.wane.membership.adapter.out.persistence;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import me.wane.common.PersistenceAdapter;
 import me.wane.membership.application.port.out.FindMembershipPort;
@@ -42,6 +43,14 @@ public class MembershipPersistenceAdapter implements RegisterMembershipPort, Fin
   public MembershipJpaEntity findMembership(MembershipId membershipId) {
     return membershipRepository.getById(
         Long.parseLong(membershipId.getMembershipId()));
+  }
+
+  @Override
+  public List<MembershipJpaEntity> findMembershipListByAddress(MembershipAddress membershipAddress) {
+    // 관악구, 서초구, 강남구 중 하나
+    String address = membershipAddress.getAddressValue();
+
+    return membershipRepository.findAllByAddress(address);
   }
 
   @Override

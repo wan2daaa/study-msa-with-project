@@ -16,8 +16,21 @@ public class MemberMoney {
   private final int balance;
 
   @Getter
-  private final String aggregateIdentifier;
+  private String aggregateIdentifier;
   // @Getter private final int linkedBankAccount;
+
+  public static MemberMoney generateMemberMoney(
+      MemberMoneyId memberMoneyId,
+      MembershipId membershipId,
+      MoneyBalance moneyBalance
+  ) {
+    return new MemberMoney(
+        memberMoneyId.memberMoneyId,
+        membershipId.membershipId,
+        moneyBalance.balance,
+        ""
+    );
+  }
 
   public static MemberMoney generateMemberMoney(
       MemberMoneyId memberMoneyId,
