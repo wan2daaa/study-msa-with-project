@@ -8,6 +8,10 @@ public class RemittanceApplication {
 
   public static void main(String[] args) {
     SpringApplication.run(RemittanceApplication.class, args);
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      System.out.println("received SIGINT (Ctrl + C)");
+    }));
   }
 
 }
